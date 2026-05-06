@@ -20,7 +20,7 @@ const Navbar = () => {
                 </div>
 
                 {/* Button Section */}
-                <button className="px-8 py-2.5 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-medium transition-all hover:brightness-110 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]">
+                <button className="px-8 py-2.5 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-medium transition-all hover:brightness-110 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] cursor-pointer">
                     Analyze resume
                 </button>
 

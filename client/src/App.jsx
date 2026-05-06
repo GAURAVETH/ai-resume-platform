@@ -1,13 +1,16 @@
-import React from 'react'
-import Navbar from './components/Navbar'
+import React from 'react';
+import Navbar from './components/Navbar';
+import Hero from './components/Hero';
+import Footer from './components/Footer';
 
-const App = () => {
+function App() {
   return (
-    <div>
+    <div className="bg-[#05020a] min-h-screen">
       <Navbar />
-
+      <Hero />
+      <Footer />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

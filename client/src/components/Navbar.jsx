@@ -22,8 +22,24 @@ const Navbar = () => {
                 </div>
 
                 {/* Button Section */}
-                <button className="px-8 py-2.5 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-medium transition-all hover:brightness-110 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] cursor-pointer"
-                    onClick={() => navigate('/analyze')}>
+                <button
+                    className="
+    /* Mobile First (Base styles) */
+    px-5 py-2 text-sm rounded-full cursor-pointer font-medium text-white 
+    bg-gradient-to-r from-purple-500 to-indigo-600 transition-all 
+    
+    /* Tablet (md) */
+    md:px-7 md:py-2 md:text-base 
+
+    /* Desktop (lg) */
+    lg:px-8 lg:py-2.5 
+
+    /* Interactions */
+    hover:brightness-110 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] 
+    active:scale-95
+  "
+                    onClick={() => navigate('/analyze')}
+                >
                     Analyze resume
                 </button>
 

@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+
+  frontend:
+    build: ./client
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+  backend:
+    build: ./server
+    ports:
+      - "5000:5000"
+    environment:
+      MONGO_URI: ${MONGO_URI}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+    restart: always

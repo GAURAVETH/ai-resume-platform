@@ -1,7 +1,9 @@
 import React from 'react';
 import { Sparkles, ArrowRight, FileText, Target, Lightbulb } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Hero = () => {
+    const navigate = useNavigate();
     return (
         <div className="relative min-h-screen bg-[#05020a] text-white overflow-hidden pt-32 pb-20 px-6">
 
@@ -30,7 +32,8 @@ const Hero = () => {
 
             {/* 3. CTA Area */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-24">
-                <button className="group flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 font-semibold text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer">
+                <button className="group flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 font-semibold text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
+                    onClick={() => navigate('/analyze')}>
                     Analyze my resume
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>

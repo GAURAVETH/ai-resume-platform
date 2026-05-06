@@ -1,7 +1,9 @@
 import React from 'react';
 import { Sparkles } from 'lucide-react';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
+    const navigate = useNavigate();
     return (
         // Increase horizontal padding (px-4 or px-6) to keep it off the very edge of the screen
         <nav className="fixed top-0 left-0 w-full z-50 px-4 py-4">
@@ -20,7 +22,8 @@ const Navbar = () => {
                 </div>
 
                 {/* Button Section */}
-                <button className="px-8 py-2.5 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-medium transition-all hover:brightness-110 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] cursor-pointer">
+                <button className="px-8 py-2.5 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-medium transition-all hover:brightness-110 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] cursor-pointer"
+                    onClick={() => navigate('/analyze')}>
                     Analyze resume
                 </button>
 

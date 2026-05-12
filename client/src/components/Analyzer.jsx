@@ -1,12 +1,18 @@
-import React, { useState } from "react";
+import React, {
+    useState
+} from "react";
 
 import {
     FileText,
     Sparkles,
-    Upload
+    Upload,
+    Loader2,
+    ShieldCheck
 } from "lucide-react";
 
-import { useNavigate } from "react-router-dom";
+import {
+    useNavigate
+} from "react-router-dom";
 
 import API from "../api/api";
 
@@ -27,30 +33,91 @@ const Analyzer = () => {
     const [loading, setLoading] =
         useState(false);
 
+    const [error, setError] =
+        useState("");
+
     const navigate = useNavigate();
+
+    const validateFile = (file) => {
+
+        const allowedTypes = [
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ];
+
+        if (!allowedTypes.includes(file.type)) {
+
+            setError(
+                "Only PDF and DOCX files are allowed."
+            );
+
+            return false;
+        }
+
+        if (file.size > 2 * 1024 * 1024) {
+
+            setError(
+                "File size must be below 2MB."
+            );
+
+            return false;
+        }
+
+        return true;
+    };
+
+    const handleFileChange = (e) => {
+
+        const file = e.target.files[0];
+
+        if (!file) return;
+
+        if (validateFile(file)) {
+
+            setResume(file);
+
+            setError("");
+        }
+    };
 
     const handleAnalyze = async () => {
 
         try {
 
+            setError("");
+
+            // VALIDATION
             if (
                 activeTab === "upload" &&
                 !resume
             ) {
-                alert("Please upload resume");
+
+                setError(
+                    "Please upload your resume."
+                );
+
                 return;
             }
 
             if (
                 activeTab === "paste" &&
-                !resumeText
+                !resumeText.trim()
             ) {
-                alert("Please paste resume text");
+
+                setError(
+                    "Please paste your resume text."
+                );
+
                 return;
             }
 
-            if (!jobDescription) {
-                alert("Please enter job description");
+            if (!jobDescription.trim()) {
+
+                setError(
+                    "Please enter job description."
+                );
+
                 return;
             }
 
@@ -58,10 +125,11 @@ const Analyzer = () => {
 
             let resumeId = "";
 
-            // UPLOAD FILE
+            // FILE UPLOAD
             if (activeTab === "upload") {
 
-                const formData = new FormData();
+                const formData =
+                    new FormData();
 
                 formData.append(
                     "resume",
@@ -70,11 +138,15 @@ const Analyzer = () => {
 
                 const uploadResponse =
                     await API.post(
+
                         "/resume/upload",
+
                         formData,
+
                         {
                             headers: {
-                                "Content-Type": "multipart/form-data"
+                                "Content-Type":
+                                    "multipart/form-data"
                             }
                         }
                     );
@@ -83,192 +155,267 @@ const Analyzer = () => {
                     uploadResponse.data.resume._id;
             }
 
-            // ANALYSIS API
+            // ANALYSIS REQUEST
             const analysisResponse =
                 await API.post(
+
                     "/analysis",
+
                     {
                         resumeId,
+
                         resumeText,
+
                         jobDescription
                     }
                 );
 
             localStorage.setItem(
+
                 "analysisResult",
+
                 JSON.stringify(
                     analysisResponse.data
                 )
             );
 
-            setLoading(false);
-
             navigate("/results");
 
-        } catch (error) {
+        } catch (err) {
 
-            console.log(error);
+            console.log(err);
+
+            setError(
+
+                err?.response?.data?.message ||
+
+                "AI analysis failed. Please try again."
+            );
+
+        } finally {
 
             setLoading(false);
-
-            alert("Analysis Failed");
         }
     };
 
     return (
 
-        <section className="bg-[#05020a] text-white py-20 px-6 min-h-screen flex flex-col items-center justify-center">
+        <section className="bg-[#05020a] text-white min-h-screen px-6 py-20 flex flex-col items-center justify-center">
 
-            <div className="text-center mb-12">
+            {/* HEADER */}
+            <div className="text-center mb-14 max-w-3xl">
 
-                <h2 className="text-4xl font-bold mb-4">
-                    Analyze your fit
-                </h2>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-sm mb-6">
 
-                <p className="text-gray-400">
-                    Two inputs. One score. Real, specific feedback.
+                    <ShieldCheck className="w-4 h-4" />
+
+                    AI-Powered ATS Resume Intelligence
+                </div>
+
+                <h1 className="text-5xl font-black mb-6 leading-tight">
+
+                    Analyze Your Resume
+                    <br />
+
+                    Like a Real Recruiter
+                </h1>
+
+                <p className="text-gray-400 text-lg leading-relaxed">
+
+                    Upload your resume and compare it
+                    against any job description using
+                    advanced AI analysis, ATS scoring,
+                    recruiter insights, and hiring recommendations.
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl w-full">
+            {/* MAIN GRID */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-7xl">
 
-                {/* RESUME CARD */}
-                <div className="bg-[#110c1d] rounded-3xl p-8 border border-white/5 shadow-2xl">
+                {/* RESUME PANEL */}
+                <div className="bg-[#110c1d] rounded-3xl border border-white/5 p-8 shadow-2xl">
 
-                    <div className="flex justify-between items-center mb-6">
+                    {/* HEADER */}
+                    <div className="flex items-center justify-between mb-8">
 
-                        <div className="flex items-center gap-2">
-                            <FileText className="w-5 h-5 text-purple-400" />
+                        <div className="flex items-center gap-3">
 
-                            <span className="font-bold text-lg">
-                                Your resume
-                            </span>
+                            <FileText className="text-purple-400 w-5 h-5" />
+
+                            <h2 className="font-bold text-xl">
+
+                                Resume Input
+                            </h2>
                         </div>
 
-                        <div className="bg-black/40 p-1 rounded-xl flex gap-1">
+                        {/* TAB SWITCH */}
+                        <div className="bg-black/40 rounded-xl p-1 flex gap-1">
 
                             <button
                                 onClick={() => setActiveTab("upload")}
-                                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === "upload"
-                                    ? "bg-[#1e1630] text-white shadow-lg"
-                                    : "text-gray-500"
+                                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === "upload"
+                                        ? "bg-[#1f1633] text-white"
+                                        : "text-gray-500"
                                     }`}
                             >
+
                                 Upload
                             </button>
 
                             <button
                                 onClick={() => setActiveTab("paste")}
-                                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === "paste"
-                                    ? "bg-[#1e1630] text-white shadow-lg"
-                                    : "text-gray-500"
+                                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === "paste"
+                                        ? "bg-[#1f1633] text-white"
+                                        : "text-gray-500"
                                     }`}
                             >
-                                Paste text
+
+                                Paste
                             </button>
                         </div>
                     </div>
 
+                    {/* UPLOAD MODE */}
                     {
                         activeTab === "upload" && (
 
-                            <label className="border-2 border-dashed border-white/10 rounded-2xl h-64 flex flex-col items-center justify-center bg-black/20 hover:bg-black/30 transition-colors cursor-pointer group">
+                            <label className="border-2 border-dashed border-white/10 rounded-3xl h-72 flex flex-col items-center justify-center bg-black/20 hover:bg-black/30 transition-all cursor-pointer group">
 
-                                <div className="p-4 bg-purple-500/10 rounded-full mb-4 group-hover:scale-110 transition-transform">
-                                    <Upload className="w-6 h-6 text-purple-400" />
+                                <div className="p-5 rounded-full bg-purple-500/10 mb-5 group-hover:scale-110 transition-transform">
+
+                                    <Upload className="w-7 h-7 text-purple-400" />
                                 </div>
 
-                                <p className="font-bold mb-1">
-                                    Drop your resume here
+                                <p className="text-xl font-bold mb-2">
+
+                                    Upload Resume
                                 </p>
 
                                 <p className="text-gray-500 text-sm">
-                                    PDF or DOCX, up to 2 MB
+
+                                    PDF or DOCX • Max 2MB
                                 </p>
 
                                 {
                                     resume && (
-                                        <p className="mt-4 text-green-400 text-sm">
+
+                                        <div className="mt-6 px-4 py-2 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
+
                                             {resume.name}
-                                        </p>
+                                        </div>
                                     )
                                 }
 
                                 <input
                                     type="file"
-                                    accept=".pdf,.doc,.docx"
                                     hidden
-                                    onChange={(e) =>
-                                        setResume(
-                                            e.target.files[0]
-                                        )
-                                    }
+                                    accept=".pdf,.doc,.docx"
+                                    onChange={handleFileChange}
                                 />
                             </label>
                         )
                     }
 
+                    {/* PASTE MODE */}
                     {
                         activeTab === "paste" && (
 
                             <textarea
-                                placeholder="Paste your full resume here..."
+                                placeholder="Paste your complete resume here..."
                                 value={resumeText}
                                 onChange={(e) =>
                                     setResumeText(
                                         e.target.value
                                     )
                                 }
-                                className="w-full h-64 bg-black/20 border border-white/10 rounded-2xl p-6 text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none placeholder:text-gray-600"
+                                className="w-full h-72 bg-black/20 border border-white/10 rounded-3xl p-6 text-gray-300 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500/40 placeholder:text-gray-600"
                             />
                         )
                     }
                 </div>
 
                 {/* JOB DESCRIPTION */}
-                <div className="bg-[#110c1d] rounded-3xl p-8 border border-white/5 shadow-2xl">
+                <div className="bg-[#110c1d] rounded-3xl border border-white/5 p-8 shadow-2xl">
 
-                    <div className="flex items-center gap-2 mb-6">
-                        <Sparkles className="w-5 h-5 text-purple-400" />
+                    <div className="flex items-center gap-3 mb-8">
 
-                        <span className="font-bold text-lg">
-                            Job description
-                        </span>
+                        <Sparkles className="text-purple-400 w-5 h-5" />
+
+                        <h2 className="font-bold text-xl">
+
+                            Job Description
+                        </h2>
                     </div>
 
                     <textarea
-                        placeholder="Paste the full job posting here..."
+                        placeholder="Paste the complete job description here..."
                         value={jobDescription}
                         onChange={(e) =>
                             setJobDescription(
                                 e.target.value
                             )
                         }
-                        className="w-full h-64 bg-black/20 border border-white/10 rounded-2xl p-6 text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none placeholder:text-gray-600"
+                        className="w-full h-72 bg-black/20 border border-white/10 rounded-3xl p-6 text-gray-300 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500/40 placeholder:text-gray-600"
                     />
+
+                    <div className="mt-6 text-sm text-gray-500 leading-relaxed">
+
+                        Include:
+                        responsibilities,
+                        required skills,
+                        technologies,
+                        qualifications,
+                        and preferred experience
+                        for the most accurate AI analysis.
+                    </div>
                 </div>
             </div>
 
+            {/* ERROR */}
+            {
+                error && (
+
+                    <div className="mt-8 px-6 py-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 max-w-xl text-center">
+
+                        {error}
+                    </div>
+                )
+            }
+
+            {/* BUTTON */}
             <div className="mt-12 text-center">
 
                 <button
-                    className="px-12 py-4 rounded-2xl bg-gradient-to-r from-purple-400 to-fuchsia-300 text-[#110c1d] font-bold text-lg shadow-[0_0_40px_rgba(192,132,252,0.3)] hover:shadow-[0_0_60px_rgba(192,132,252,0.5)] transition-all transform hover:-translate-y-1 active:scale-95 disabled:opacity-50 cursor-pointer"
                     onClick={handleAnalyze}
                     disabled={loading}
+                    className="px-12 py-5 rounded-3xl bg-gradient-to-r from-purple-400 to-fuchsia-300 text-[#110c1d] font-black text-lg shadow-[0_0_50px_rgba(192,132,252,0.3)] hover:shadow-[0_0_80px_rgba(192,132,252,0.5)] transition-all hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 mx-auto"
                 >
+
                     {
                         loading
-                            ? "Analyzing..."
-                            : "Analyze my fit"
+                            ? (
+                                <>
+                                    <Loader2 className="animate-spin w-5 h-5" />
+
+                                    Performing Deep AI Analysis...
+                                </>
+                            )
+                            : (
+                                <>
+                                    <Sparkles className="w-5 h-5" />
+
+                                    Analyze My Resume
+                                </>
+                            )
                     }
                 </button>
 
-                <div className="mt-8 text-gray-600 text-[10px] leading-relaxed max-w-xs mx-auto">
-                    We don't require an account.
-                    Your text is stored only to render the result page.
-                    <br />
-                    Don't paste private information.
-                </div>
+                <p className="mt-6 text-gray-600 text-xs max-w-md mx-auto leading-relaxed">
+
+                    Your resume is analyzed using advanced AI ATS scoring,
+                    recruiter-grade evaluation, semantic skill matching,
+                    and hiring intelligence algorithms.
+                </p>
             </div>
         </section>
     );

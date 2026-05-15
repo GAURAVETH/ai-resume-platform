@@ -46,7 +46,6 @@ const ResultPage = () => {
         try {
             const parsed = JSON.parse(stored);
 
-            // HANDLE DIFFERENT API STRUCTURES
             const analysisData =
                 parsed.analysis || parsed.data || parsed;
 
@@ -137,111 +136,193 @@ const ResultPage = () => {
     ];
 
     // REUSABLE SECTION
-    const Section = ({ title, items, icon, color }) => (
-        <div className="bg-[#110c1d] border border-white/5 rounded-3xl p-8">
-            <div className="flex items-center gap-3 mb-6">
-                {icon}
+    const Section = ({
+        title,
+        items,
+        icon,
+        color,
+    }) => {
+        // FILTER INVALID ITEMS
+        const validItems = safeArray(items).filter(
+            (item) => {
+                if (!item) return false;
 
-                <h3 className={`text-2xl font-bold ${color}`}>
-                    {title}
-                </h3>
-            </div>
+                // OBJECT ITEMS
+                if (typeof item === "object") {
+                    return (
+                        item.message &&
+                        item.message !==
+                        "Not Available" &&
+                        item.message !==
+                        "Not Applicable" &&
+                        item.message.trim() !== ""
+                    );
+                }
 
-            <div className="space-y-4">
-                {safeArray(items).length > 0 ? (
-                    safeArray(items).map((item, index) => (
-                        <div
-                            key={index}
-                            className="p-5 rounded-2xl bg-white/5 border border-white/5 hover:border-purple-500/20 transition-all"
-                        >
-                            {typeof item === "object"
-                                ? item.message
-                                : item}
-                        </div>
-                    ))
-                ) : (
-                    <div className="text-gray-500">
-                        Not Available
-                    </div>
-                )}
+                // STRING ITEMS
+                return (
+                    item !== "Not Available" &&
+                    item !== "Not Applicable" &&
+                    item.trim() !== ""
+                );
+            }
+        );
+
+        // HIDE SECTION
+        if (validItems.length === 0)
+            return null;
+
+        return (
+            <div className="bg-[#110c1d] border border-white/5 rounded-3xl p-8">
+
+                <div className="flex items-center gap-3 mb-6">
+
+                    {icon}
+
+                    <h3
+                        className={`text-2xl font-bold ${color}`}
+                    >
+                        {title}
+                    </h3>
+
+                </div>
+
+                <div className="space-y-4">
+
+                    {validItems.map(
+                        (item, index) => (
+                            <div
+                                key={index}
+                                className="p-5 rounded-2xl bg-white/5 border border-white/5 hover:border-purple-500/20 transition-all"
+                            >
+
+                                {typeof item ===
+                                    "object"
+                                    ? item.message
+                                    : item}
+
+                            </div>
+                        )
+                    )}
+
+                </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     return (
         <div className="min-h-screen bg-[#05020a] text-white p-6 md:p-12">
+
             <div className="max-w-7xl mx-auto">
+
                 {/* TOP BAR */}
                 <div className="flex justify-between items-center mb-10">
+
                     <button
                         onClick={() => navigate("/")}
                         className="flex items-center gap-2 text-gray-400 hover:text-white"
                     >
+
                         <ArrowLeft className="w-4 h-4" />
 
                         Back
+
                     </button>
 
                     <div className="px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-sm">
+
                         AI Recruiter Analysis
+
                     </div>
                 </div>
 
                 {/* HERO */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+
                     {/* SUMMARY */}
                     <div className="lg:col-span-2 bg-[#110c1d] rounded-3xl border border-white/5 p-10 relative overflow-hidden">
+
                         <div className="absolute top-0 right-0 opacity-10 p-10">
+
                             <Brain className="w-40 h-40 text-purple-500" />
+
                         </div>
 
                         <h1 className="text-5xl font-black mb-6">
+
                             AI Resume Intelligence
+
                         </h1>
 
                         <p className="text-gray-300 text-lg leading-relaxed mb-8">
+
                             {data.executiveSummary ||
                                 "AI analysis generated successfully."}
+
                         </p>
 
                         <div className="flex flex-wrap gap-4">
-                            <div className="px-5 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300">
-                                {data.seniorityLevel ||
-                                    "Not Available"}
-                            </div>
 
-                            <div className="px-5 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300">
-                                {data.industryFit ||
-                                    "Not Available"}
-                            </div>
+                            {data.seniorityLevel &&
+                                data.seniorityLevel !==
+                                "Not Available" && (
+                                    <div className="px-5 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300">
 
-                            <div className="px-5 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300">
-                                Interview Probability:
-                                {" "}
-                                {safeValue(
-                                    data.interviewProbability
+                                        {data.seniorityLevel}
+
+                                    </div>
                                 )}
-                                %
-                            </div>
+
+                            {data.industryFit &&
+                                data.industryFit !==
+                                "Not Available" && (
+                                    <div className="px-5 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300">
+
+                                        {data.industryFit}
+
+                                    </div>
+                                )}
+
+                            {data.interviewProbability >
+                                0 && (
+                                    <div className="px-5 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300">
+
+                                        Interview Probability:
+                                        {" "}
+                                        {safeValue(
+                                            data.interviewProbability
+                                        )}
+                                        %
+
+                                    </div>
+                                )}
+
                         </div>
                     </div>
 
                     {/* SCORE */}
                     <div className="bg-[#110c1d] rounded-3xl border border-white/5 p-8 flex flex-col items-center justify-center">
+
                         <div
                             className={`text-7xl font-black ${getScoreColor(
                                 data.overallScore
                             )}`}
                         >
+
                             {safeValue(data.overallScore)}%
+
                         </div>
 
                         <div className="mt-4 text-gray-400">
+
                             Overall Match Score
+
                         </div>
 
                         <div className="mt-8 w-full h-64">
+
                             <ResponsiveContainer>
+
                                 <RadialBarChart
                                     innerRadius="30%"
                                     outerRadius="100%"
@@ -256,18 +337,23 @@ const ResultPage = () => {
                                     startAngle={180}
                                     endAngle={0}
                                 >
+
                                     <RadialBar
                                         minAngle={15}
                                         dataKey="value"
                                     />
+
                                 </RadialBarChart>
+
                             </ResponsiveContainer>
+
                         </div>
                     </div>
                 </div>
 
                 {/* SCORE GRID */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+
                     {[
                         {
                             label: "ATS",
@@ -281,52 +367,75 @@ const ResultPage = () => {
                         },
                         {
                             label: "Experience",
-                            value: data.experienceScore,
+                            value:
+                                data.experienceScore,
                             icon: <Briefcase />,
                         },
                         {
                             label: "Communication",
-                            value: data.communicationScore,
+                            value:
+                                data.communicationScore,
                             icon: <Brain />,
                         },
-                    ].map((item, index) => (
-                        <div
-                            key={index}
-                            className="bg-[#110c1d] rounded-3xl border border-white/5 p-6"
-                        >
-                            <div className="text-purple-400 mb-4">
-                                {item.icon}
-                            </div>
-
+                    ]
+                        .filter(
+                            (item) =>
+                                safeValue(item.value) > 0
+                        )
+                        .map((item, index) => (
                             <div
-                                className={`text-5xl font-black ${getScoreColor(
-                                    item.value
-                                )}`}
+                                key={index}
+                                className="bg-[#110c1d] rounded-3xl border border-white/5 p-6"
                             >
-                                {safeValue(item.value)}%
-                            </div>
 
-                            <div className="text-gray-400 mt-2">
-                                {item.label}
+                                <div className="text-purple-400 mb-4">
+
+                                    {item.icon}
+
+                                </div>
+
+                                <div
+                                    className={`text-5xl font-black ${getScoreColor(
+                                        item.value
+                                    )}`}
+                                >
+
+                                    {safeValue(item.value)}%
+
+                                </div>
+
+                                <div className="text-gray-400 mt-2">
+
+                                    {item.label}
+
+                                </div>
+
                             </div>
-                        </div>
-                    ))}
+                        ))}
+
                 </div>
 
                 {/* CHARTS */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+
                     {/* RADAR */}
                     <div className="bg-[#110c1d] rounded-3xl border border-white/5 p-8">
+
                         <h3 className="text-2xl font-bold mb-8">
+
                             Skill Intelligence Radar
+
                         </h3>
 
                         <div className="h-80">
+
                             <ResponsiveContainer>
+
                                 <RadarChart
                                     outerRadius="80%"
                                     data={scoreData}
                                 >
+
                                     <PolarGrid />
 
                                     <PolarAngleAxis dataKey="subject" />
@@ -337,20 +446,29 @@ const ResultPage = () => {
                                         fill="#a855f7"
                                         fillOpacity={0.6}
                                     />
+
                                 </RadarChart>
+
                             </ResponsiveContainer>
+
                         </div>
                     </div>
 
-                    {/* BAR */}
+                    {/* BAR CHART */}
                     <div className="bg-[#110c1d] rounded-3xl border border-white/5 p-8">
+
                         <h3 className="text-2xl font-bold mb-8">
+
                             Performance Metrics
+
                         </h3>
 
                         <div className="h-80">
+
                             <ResponsiveContainer>
+
                                 <BarChart data={barData}>
+
                                     <XAxis dataKey="name" />
 
                                     <YAxis />
@@ -358,14 +476,36 @@ const ResultPage = () => {
                                     <Tooltip />
 
                                     <Bar dataKey="value" />
+
                                 </BarChart>
+
                             </ResponsiveContainer>
+
                         </div>
                     </div>
                 </div>
 
                 {/* SECTIONS */}
                 <div className="space-y-10">
+
+                    <Section
+                        title="Matched Skills"
+                        items={data.matchedSkills}
+                        icon={
+                            <CheckCircle2 className="text-green-400" />
+                        }
+                        color="text-green-400"
+                    />
+
+                    <Section
+                        title="Missing Skills"
+                        items={data.missingSkills}
+                        icon={
+                            <AlertTriangle className="text-red-400" />
+                        }
+                        color="text-red-400"
+                    />
+
                     <Section
                         title="Matched ATS Keywords"
                         items={data.matchedKeywords}
@@ -413,7 +553,9 @@ const ResultPage = () => {
 
                     <Section
                         title="Leadership Indicators"
-                        items={data.leadershipIndicators}
+                        items={
+                            data.leadershipIndicators
+                        }
                         icon={
                             <Target className="text-cyan-400" />
                         }
@@ -431,7 +573,9 @@ const ResultPage = () => {
 
                     <Section
                         title="Recommended Improvements"
-                        items={data.recommendedImprovements}
+                        items={
+                            data.recommendedImprovements
+                        }
                         icon={
                             <TrendingUp className="text-purple-400" />
                         }
@@ -440,32 +584,104 @@ const ResultPage = () => {
 
                     <Section
                         title="Career Recommendations"
-                        items={data.careerRecommendations}
-                        icon={<Brain className="text-cyan-400" />}
+                        items={
+                            data.careerRecommendations
+                        }
+                        icon={
+                            <Brain className="text-cyan-400" />
+                        }
                         color="text-cyan-400"
                     />
 
                     <Section
                         title="Resume Optimization Tips"
-                        items={data.resumeOptimizationTips}
+                        items={
+                            data.resumeOptimizationTips
+                        }
                         icon={
                             <Sparkles className="text-yellow-400" />
                         }
                         color="text-yellow-400"
                     />
+
+                    <Section
+                        title="Skills To Improve Hiring Chance"
+                        items={
+                            data.skillsToImproveHiringChance
+                        }
+                        icon={
+                            <TrendingUp className="text-indigo-400" />
+                        }
+                        color="text-indigo-400"
+                    />
+
+                    <Section
+                        title="Recommended Certifications"
+                        items={
+                            data.recommendedCertifications
+                        }
+                        icon={
+                            <ShieldCheck className="text-green-400" />
+                        }
+                        color="text-green-400"
+                    />
+
+                    <Section
+                        title="Project Suggestions"
+                        items={
+                            data.projectSuggestions
+                        }
+                        icon={
+                            <Briefcase className="text-pink-400" />
+                        }
+                        color="text-pink-400"
+                    />
+
+                    {/* FEEDBACK */}
+                    <Section
+                        title="Recruiter Feedback"
+                        items={safeArray(
+                            data.feedbackItems
+                        )
+                            .filter(
+                                (item) =>
+                                    item?.message &&
+                                    item.message !==
+                                    "Not Applicable"
+                            )
+                            .map(
+                                (item) =>
+                                    `${item.type}: ${item.message}`
+                            )}
+                        icon={
+                            <Brain className="text-purple-400" />
+                        }
+                        color="text-purple-400"
+                    />
+
                 </div>
 
                 {/* FINAL */}
-                <div className="mt-12 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-3xl border border-purple-500/20 p-10">
-                    <h2 className="text-4xl font-black mb-6">
-                        Hiring Recommendation
-                    </h2>
+                {data.hiringRecommendation &&
+                    data.hiringRecommendation !==
+                    "Not Available" && (
+                        <div className="mt-12 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-3xl border border-purple-500/20 p-10">
 
-                    <p className="text-gray-300 text-lg leading-relaxed">
-                        {data.hiringRecommendation ||
-                            "No recommendation available."}
-                    </p>
-                </div>
+                            <h2 className="text-4xl font-black mb-6">
+
+                                Hiring Recommendation
+
+                            </h2>
+
+                            <p className="text-gray-300 text-lg leading-relaxed">
+
+                                {data.hiringRecommendation}
+
+                            </p>
+
+                        </div>
+                    )}
+
             </div>
         </div>
     );

@@ -12,14 +12,16 @@ const Navbar = () => {
             <div className="max-w-[98%] mx-auto flex items-center justify-between px-8 py-3 rounded-2xl bg-[#0f0a19]/80 backdrop-blur-md border border-white/10 shadow-2xl">
 
                 {/* Logo Section */}
-                <div className="flex items-center gap-3 cursor-pointer">
-                    <div className="p-2 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-lg">
-                        <Sparkles className="w-5 h-5 text-white" />
+                <a href="/">
+                    <div className="flex items-center gap-3 cursor-pointer">
+                        <div className="p-2 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-lg">
+                            <Sparkles className="w-5 h-5 text-white" />
+                        </div>
+                        <h1 className="text-xl font-bold tracking-tight text-white">
+                            Resume<span className="text-purple-400">Fit</span>
+                        </h1>
                     </div>
-                    <h1 className="text-xl font-bold tracking-tight text-white">
-                        Resume<span className="text-purple-400">Fit</span>
-                    </h1>
-                </div>
+                </a>
 
                 {/* Button Section */}
                 <button

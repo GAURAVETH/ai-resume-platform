@@ -1,65 +1,63 @@
 import OpenAI from "openai";
 
 const client = new OpenAI({
-
-    apiKey:
-        process.env.GROQ_API_KEY,
-
-    baseURL:
-        "https://api.groq.com/openai/v1",
+    apiKey: process.env.GROQ_API_KEY,
+    baseURL: "https://api.groq.com/openai/v1",
 });
 
-const analyzeResumeAI =
-    async (
-        resumeText,
-        jobDescription
-    ) => {
+// Lock + queue system to prevent overload
+let isProcessing = false;
+let queue = [];
 
-        try {
+// Helper to process next request in queue
+const processNext = async () => {
+    if (queue.length === 0) {
+        isProcessing = false;
+        return;
+    }
 
-            const prompt = `
+    const { resumeText, jobDescription, resolve, reject } = queue.shift();
 
+    try {
+        const result = await runAnalysis(resumeText, jobDescription);
+        resolve(result);
+    } catch (error) {
+        reject(error);
+    } finally {
+        // Add a small delay to avoid hammering the API
+        setTimeout(() => processNext(), 1000);
+    }
+};
+
+// Core analysis function
+const runAnalysis = async (resumeText, jobDescription) => {
+    if (!resumeText || !jobDescription) {
+        throw new Error("Resume or Job Description missing");
+    }
+
+    const prompt = `
 You are a world-class ATS Resume Analyzer, Senior Technical Recruiter, Hiring Manager, and Career Coach.
 
-Your task is to deeply analyze the candidate resume against the provided job description.
+Analyze the candidate resume against the provided job description.
 
-You must behave like:
-- ATS system
-- recruiter
-- engineering manager
-- hiring committee
-- career advisor
-
-Analyze:
-
-1. ATS compatibility
-2. Technical skills match
-3. Soft skills match
-4. Experience relevance
-5. Years of experience suitability
-6. Project quality and complexity
-7. Leadership and ownership
-8. Communication and writing quality
-9. Education relevance
-10. Certifications relevance
-11. Industry alignment
-12. Missing critical technologies
-13. Missing ATS keywords
-14. Resume strengths
-15. Resume weaknesses
-16. Hiring risks
-17. Achievement impact
-18. Resume optimization quality
-19. Interview probability
-20. Final hiring recommendation
-
-Additionally provide:
-- skills candidate should improve
-- certifications candidate should pursue
-- projects candidate should build
-- ATS optimization recommendations
-- technologies missing from resume
-- ways to improve hiring probability
+IMPORTANT RULES:
+- Return ONLY valid JSON
+- No markdown
+- No explanation outside JSON
+- Do NOT generate fake information
+- Do NOT hallucinate experience
+- Do NOT invent technologies not present
+- Only analyze based on provided resume and job description
+- If data is unavailable, return realistic empty values
+- Every field MUST exist in response
+- Scores must be realistic
+- Use recruiter-grade analysis
+- Provide actionable improvement advice in:
+  - "recommendedImprovements": resume changes needed
+  - "careerRecommendations": long-term career advice
+  - "resumeOptimizationTips": ATS/formatting improvements
+  - "skillsToImproveHiringChance": missing skills to learn
+  - "recommendedCertifications": certifications that increase selection chance
 
 Resume:
 ${resumeText}
@@ -67,21 +65,7 @@ ${resumeText}
 Job Description:
 ${jobDescription}
 
-IMPORTANT RULES:
-
-- Return ONLY valid JSON.
-- NEVER include markdown.
-- NEVER include explanation outside JSON.
-- NEVER leave important arrays empty.
-- Be highly specific and recruiter-grade.
-- Avoid generic feedback.
-- Recommendations must be actionable.
-- Scores must be realistic.
-- Mention missing technologies if relevant.
-- Mention quantified achievements if missing.
-- Mention missing cloud/devops/tools if relevant.
-
-Use this EXACT JSON structure:
+Return EXACT JSON structure:
 
 {
   "overallScore": 0,
@@ -91,51 +75,28 @@ Use this EXACT JSON structure:
   "projectScore": 0,
   "educationScore": 0,
   "communicationScore": 0,
-
   "interviewProbability": 0,
-
   "seniorityLevel": "",
-
   "industryFit": "",
-
   "roleMatch": "",
-
   "hiringRecommendation": "",
-
   "executiveSummary": "",
-
   "matchedSkills": [],
-
   "missingSkills": [],
-
   "matchedKeywords": [],
-
   "missingKeywords": [],
-
   "strengths": [],
-
   "weaknesses": [],
-
   "leadershipIndicators": [],
-
   "projectAnalysis": [],
-
   "achievementImpact": [],
-
   "hiringRisks": [],
-
   "recommendedImprovements": [],
-
   "careerRecommendations": [],
-
   "resumeOptimizationTips": [],
-
   "skillsToImproveHiringChance": [],
-
   "recommendedCertifications": [],
-
   "projectSuggestions": [],
-
   "feedbackItems": [
     {
       "type": "",
@@ -145,67 +106,47 @@ Use this EXACT JSON structure:
 }
 `;
 
-            const response =
-                await client.chat.completions.create({
-
-                    model:
-                        "llama-3.3-70b-versatile",
-
-                    temperature: 0.2,
-
-                    max_tokens: 4000,
-
-                    response_format: {
-                        type: "json_object"
+    let attempts = 0;
+    while (attempts < 2) {
+        try {
+            const response = await client.chat.completions.create({
+                model: "llama-3.3-70b-versatile",
+                temperature: 0.2,
+                max_tokens: 4000,
+                response_format: { type: "json_object" },
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are an ATS AI recruiter that ONLY returns valid JSON.",
                     },
+                    {
+                        role: "user",
+                        content: prompt,
+                    },
+                ],
+            });
 
-                    messages: [
+            const content = response?.choices?.[0]?.message?.content;
+            if (!content) throw new Error("Empty AI response");
 
-                        {
-                            role: "system",
-
-                            content:
-                                "You are an expert ATS AI recruiter and career coach that ONLY returns valid JSON."
-                        },
-
-                        {
-                            role: "user",
-
-                            content: prompt
-                        }
-                    ]
-                });
-
-            const content =
-                response
-                    ?.choices?.[0]
-                    ?.message?.content;
-
-            if (!content) {
-
-                throw new Error(
-                    "Empty AI response"
-                );
-            }
-
-            // VALIDATE JSON
-            JSON.parse(content);
-
-            return content;
-
+            return JSON.parse(content);
         } catch (error) {
-
-            console.log(
-                "AI ANALYSIS ERROR:",
-                error.message
-            );
-
-            throw new Error(
-                "AI analysis failed"
-            );
+            attempts++;
+            if (attempts >= 2) throw new Error(error.message || "AI analysis failed");
         }
-    };
-
-export {
-    analyzeResumeAI
+    }
 };
+
+// Public function with queue handling
+const analyzeResumeAI = (resumeText, jobDescription) => {
+    return new Promise((resolve, reject) => {
+        queue.push({ resumeText, jobDescription, resolve, reject });
+
+        if (!isProcessing) {
+            isProcessing = true;
+            processNext();
+        }
+    });
+};
+
+export { analyzeResumeAI };

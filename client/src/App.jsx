@@ -1,10 +1,9 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Footer from './components/Footer';
 import Analyzer from './components/Analyzer';
 import ResultPage from './components/ResultPage';
-
 
 function App() {
   return (
@@ -14,8 +13,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Hero />} />
           <Route path="/analyze" element={<Analyzer />} />
-          <Route path="*" element={<div className="text-white text-center mt-20">404 - Page not found</div>} />
           <Route path="/results" element={<ResultPage />} />
+          {/* Catch-all route: redirect to home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Footer />
       </div>

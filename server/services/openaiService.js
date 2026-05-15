@@ -1,10 +1,15 @@
 import OpenAI from "openai";
 
+const apiKey = process.env.GROQ_API_KEY || process.env.GROQ_API_KEY2;
+
+if (!apiKey) {
+    throw new Error("No API key found. Please set GROQ_API_KEY or GROQ_API_KEY2 in your environment.");
+}
+
 const client = new OpenAI({
-    apiKey: process.env.GROQ_API_KEY,
+    apiKey,
     baseURL: "https://api.groq.com/openai/v1",
 });
-
 // Lock + queue system to prevent overload
 let isProcessing = false;
 let queue = [];
